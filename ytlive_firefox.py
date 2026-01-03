@@ -10,12 +10,10 @@ import pytz
 import os
 
 
-
 # 1. Define the path to your Firefox profile directory
-# Use forward slashes or double backslashes for Windows paths to avoid issues with escape characters
 profile_path = r'/home/ed/snap/firefox/common/.mozilla/firefox/kv02ko7y.default'
 
-# 2. Define the path to your geckodriver executable (if not in PATH)
+# 2. Define the path to your geckodriver executable
 geckodriver_path = r'/home/ed/Documents/ytlive/geckodriver-v0.35.0-linux64/geckodriver'
 
 # 3. Create Firefox options
@@ -23,13 +21,11 @@ options = Options()
 options.add_argument("-profile")
 options.add_argument(profile_path)
 
-# 4. (Optional) Set up a Service object if geckodriver is not in your system PATH
+# 4. Set up a Service object if geckodriver is not in your system PATH
 service = Service(executable_path=geckodriver_path)
 
 # 5. Initialize the WebDriver with the options and service
 driver = webdriver.Firefox(service=service, options=options)
-
-
 
 # --- Step 1: Go directly to the YouTube channel ---
 driver.get("https://www.youtube.com/@NBCNews")
@@ -90,16 +86,33 @@ except Exception as e:
 # -------------------------------------------------------------------
 
 philippines_tz = pytz.timezone("Asia/Manila")
-while True:
-    now_ph = datetime.now(philippines_tz)
-    current_time = now_ph.strftime("%I:%M:%S %p")
-    print(f"⏰ Current PH Time: {current_time}", end="\r")
 
-    if now_ph.hour == 14 and now_ph.minute == 30:
-        print("\n🕑 2:30 PM reached! Closing Firefox and shutting down...")
+try:
+    while True:
+        # Check if the driver is still connected and if there is at least one window
+        if len(driver.window_handles) == 0 or not driver.service.is_connectable():
+            print("⚠️ Firefox is closed or the window is no longer available. Terminating program.")
+            break
+
+        now_ph = datetime.now(philippines_tz)
+        current_time = now_ph.strftime("%I:%M:%S %p")
+        print(f"⏰ Current PH Time: {current_time}", end="\r")
+
+        if now_ph.hour == 14 and now_ph.minute == 30:
+            print("\n🕑 2:30 PM reached! Closing Firefox and shutting down...")
+            driver.quit()  # Ensure browser is properly closed
+            print("💻 Shutting down the PC...")
+            os.system("shutdown /s /t 5")  # For Windows, shuts down in 5 seconds
+            break
+
+        time.sleep(10)  # Check every 10 seconds
+
+except Exception as e:
+    print(f"⚠️ An error occurred: {e}")
+
+finally:
+    # Always make sure the driver is quit at the end of the program
+    try:
         driver.quit()
-        print("💻 Shutting down the PC...")
-        os.system("shutdown /s /t 5")  # For Windows, shuts down in 5 seconds
-        break
-
-    time.sleep(10)  # Check every 10 seconds
+    except Exception as quit_error:
+        print("⚠️ Driver quit error:", quit_error)
