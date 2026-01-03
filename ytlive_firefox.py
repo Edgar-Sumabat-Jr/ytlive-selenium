@@ -98,11 +98,14 @@ try:
         current_time = now_ph.strftime("%I:%M:%S %p")
         print(f"⏰ Current PH Time: {current_time}", end="\r")
 
+        # Adjust to the correct 2:30 PM time check
         if now_ph.hour == 14 and now_ph.minute == 30:
             print("\n🕑 2:30 PM reached! Closing Firefox and shutting down...")
             driver.quit()  # Ensure browser is properly closed
             print("💻 Shutting down the PC...")
-            os.system("shutdown /s /t 5")  # For Windows, shuts down in 5 seconds
+
+            # Shutdown command for Ubuntu/Linux
+            os.system("sudo shutdown now")  # This will initiate shutdown immediately
             break
 
         time.sleep(10)  # Check every 10 seconds
